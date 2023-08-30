@@ -11,15 +11,13 @@ def import_books():
         reader = csv.DictReader(csvfile, delimiter='@')
         for row in reader:
             try:
-                publication_date_str = row['Срок окончания авторского договора']
-                publication_date = datetime.strptime(publication_date_str, '%d.%m.%Y').date()
                 book = Book(
                     author = row['Авторы'],
                     title = row['Название издания'],
                     edition_type = row['Вид издания'],
-                    number = row['Год издания'],
+                    number = row['ISBN'],
                     page_count = row['Кол-во стр.'],
-                    publication_date = publication_date,
+                    publication_date = row['Год издания'],
                     description = row['Аннотация']
                 )
                 book.save()
