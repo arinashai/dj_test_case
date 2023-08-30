@@ -1,1 +1,1 @@
-# django_test_case
+# dj_test_case
