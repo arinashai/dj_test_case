@@ -7,13 +7,18 @@ N_SHELF_SLOT = 6
 
 # За каждым залом закреплен библиотекарь.
 class Librarian(models.Model):
+
     name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
 
 # Для каждой книги заведена карточка, в которой отражаются: 
 # название книги, автор, вид издания, номер,
 # количество страниц, дата издания, описание
 
 class Book(models.Model):
+
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     edition_type = models.CharField(max_length=50)
@@ -49,16 +54,21 @@ class ShelfSlot(models.Model):
     slot_number = models.IntegerField(validators=[MaxValueValidator(N_SHELF_SLOT)])
     books = models.ManyToManyField(Book, through='BookShelf', blank=True)
 
+    def __str__(self):
+        return f'ShelfSlot {self.slot_number} on {self.shelf}'
+
 class BookShelf(models.Model):
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True, blank=True)
     shelf_slot = models.ForeignKey(ShelfSlot, on_delete=models.CASCADE)
 
 class Reader(models.Model):
+
     name = models.CharField(max_length=255)
     borrowed_books = models.ManyToManyField(Book, through='Borrow')
 
 class Borrow(models.Model):
+
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     reader = models.ForeignKey(Reader, on_delete=models.CASCADE)
     borrowed_date = models.DateField()
@@ -68,6 +78,7 @@ class Borrow(models.Model):
 # При этом книги периодически перемещаются между залами, стеллажами и полками.
 # За каждым залом закреплен библиотекарь. Все перемещения книг библиотекари отмечают в специальном журнале.
 class BookMovement(models.Model):
+
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     from_shelf_slot = models.ForeignKey(ShelfSlot, on_delete=models.CASCADE, related_name='from_shelf_slot')
     to_shelf_slot = models.ForeignKey(ShelfSlot, on_delete=models.CASCADE, related_name='to_shelf_slot')
