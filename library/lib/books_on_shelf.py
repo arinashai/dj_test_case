@@ -2,7 +2,7 @@ from lib.models import Book, ShelfSlot, BookShelf
 import random
 from django.db import transaction
 
-# Заполнение стелажей и полок
+# Заполнение стеллажей и полок
 
 n_books_per_slot = 10
 
