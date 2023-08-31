@@ -71,8 +71,9 @@ class Borrow(models.Model):
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     reader = models.ForeignKey(Reader, on_delete=models.CASCADE)
-    borrowed_date = models.DateField()
+    borrow_date = models.DateField()
     return_date = models.DateField()
+    return_date_fact = models.DateField(null=True, blank=True)
     returned = models.BooleanField(default=False)
 
 # При этом книги периодически перемещаются между залами, стеллажами и полками.
