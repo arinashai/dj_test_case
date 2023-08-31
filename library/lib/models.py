@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 
 N_SHELF = 5
 N_SHELF_SLOT = 6
+N_BOOK_SLOT = 10
 
 # За каждым залом закреплен библиотекарь.
 class Librarian(models.Model):
@@ -61,6 +62,14 @@ class BookShelf(models.Model):
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True, blank=True)
     shelf_slot = models.ForeignKey(ShelfSlot, on_delete=models.CASCADE)
+
+    def clean(self):
+            super().clean()
+
+            current_books_count = BookShelf.objects.filter(shelf_slot=self.shelf_slot).count()
+
+            if current_books_count >= N_BOOK_SLOT:
+                raise ValidationError(f"На полке не может быть более {N_BOOK_SLOT} книг")
 
 class Reader(models.Model):
 

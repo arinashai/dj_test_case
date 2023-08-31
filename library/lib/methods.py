@@ -1,7 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
-from lib.models import Borrow, Hall, BookShelf
-from django.db.models import Value
+from lib.models import Borrow, Hall, BookShelf, Book
 
 MAX_READER_BOOK = 3
 RETURN_DEADLINE_DAYS = 30
@@ -25,7 +24,7 @@ def borrowing_book(reader, book):
     return_date = borrow_date + timedelta(days=RETURN_DEADLINE_DAYS) 
 
     # Убираем книгу с полки
-    BookShelf.objects.filter(book=book).update(book=Value(None))
+    BookShelf.objects.filter(book=book).update(book=None)
 
     Borrow.objects.create(book=book, reader=reader, borrow_date=borrow_date, return_date=return_date)
     return 'Книга успешно взята.'
@@ -62,3 +61,34 @@ def returning_book(reader, book):
 
     except EmptySlotNotFound:
         return 'Все полки заняты.'
+
+# Для удобства поиска библиотекари иногда переставляют все книги, 
+# чтобы получилась следующая сортировка:
+# по виду издания, названию, году издания 
+# и количеству страниц в порядке возрастания.
+
+def sorting_books():
+    sorted_books = Book.objects.all().order_by(
+        'edition_type', 'title', 'publication_date', 'page_count'
+    )
+
+    bookshelves = BookShelf.objects.all().order_by(
+        'shelfslot__shelf__hall', 'shelfslot__shelf__number', 'shelfslot__slot_number'
+    )
+
+    # Связываем отсортированные книги с соответствующими слотами на полках
+    for bookshelf, book in zip(bookshelves, sorted_books):
+        bookshelf.book = book
+        bookshelf.save()
+
+    # Очищаем оставшиеся слоты на полках, если книг меньше, чем слотов
+    for bookshelf in BookShelf.objects.filter(id > sorted_books.count()):
+        bookshelf.book = None
+        bookshelf.save()
+
+# Периодически библиотекарям требуется сборка следующих отчетов:
+#- Количество книг определенного автора в библиотеке
+#- 10 самых популярных книг за последний месяц
+#- Количество книг, которые сейчас находятся на руках в разрезе читателей - Перечень читателей, которые просрочили возврат книг
+#- 10 самых активных читателей, которые взяли больше всего книг, за прошедший месяц - Среднее количество страниц в разрезе видов изданий, которые прочитали читатели за последний месяц
+#- 10 самых перемещаемых книг за последний месяц
