@@ -71,6 +71,9 @@ class BookShelf(models.Model):
             if current_books_count >= N_BOOK_SLOT:
                 raise ValidationError(f"На полке не может быть более {N_BOOK_SLOT} книг")
 
+    def __str__(self):
+        return f'Book {self.book} on slot {self.shelf_slot}'
+
 class Reader(models.Model):
 
     name = models.CharField(max_length=255)
@@ -82,11 +85,10 @@ class Borrow(models.Model):
     reader = models.ForeignKey(Reader, on_delete=models.CASCADE)
     borrow_date = models.DateField()
     return_date = models.DateField()
-    return_date_fact = models.DateField(null=True, blank=True)
     returned = models.BooleanField(default=False)
 
 # При этом книги периодически перемещаются между залами, стеллажами и полками.
-# За каждым залом закреплен библиотекарь. Все перемещения книг библиотекари отмечают в специальном журнале.
+# Все перемещения книг библиотекари отмечают в специальном журнале.
 class BookMovement(models.Model):
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
