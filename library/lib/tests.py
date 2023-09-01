@@ -2,7 +2,7 @@ from django.test import TestCase
 from lib.models import Book, Reader, Librarian, Hall, Shelf, ShelfSlot
 from lib.models import Borrow, BookShelf, BookMovement
 from lib.methods import borrowing_book, MAX_READER_BOOK
-from lib.methods import returning_book, sorting_books, bookmovement
+from lib.methods import returning_book, sorting_books, book_movement
 from lib.models import N_SHELF, N_SHELF_SLOT, N_BOOK_SLOT
 
 class BorrowingBookTestCase(TestCase):
@@ -150,7 +150,7 @@ class BookMovementTestCase(TestCase):
 
         # Случайная полка
         to_slot = ShelfSlot.objects.order_by('?')[0]
-        bookmovement(book=self.book, to_slot=to_slot)
+        book_movement(book=self.book, to_slot=to_slot)
 
         result_record_bookshelf = ShelfSlot.objects.get(books=self.book)
         self.assertEqual(result_record_bookshelf, to_slot)

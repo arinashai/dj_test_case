@@ -15,7 +15,7 @@ class EmptySlotNotFound(Exception):
 def last_month_date():
     return datetime.now() - timedelta(days=30)
 
-def bookmovement(book, to_slot):
+def book_movement(book, to_slot):
     date = datetime.now()
     from_slot = ShelfSlot.objects.get(books=book)
     # Перемещаем
