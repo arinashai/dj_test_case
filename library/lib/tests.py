@@ -1,7 +1,8 @@
 from django.test import TestCase
-from lib.models import Book, Reader, Librarian, Hall, Shelf, ShelfSlot, Borrow, BookShelf
+from lib.models import Book, Reader, Librarian, Hall, Shelf, ShelfSlot
+from lib.models import Borrow, BookShelf, BookMovement
 from lib.methods import borrowing_book, MAX_READER_BOOK
-from lib.methods import returning_book, sorting_books
+from lib.methods import returning_book, sorting_books, bookmovement
 from lib.models import N_SHELF, N_SHELF_SLOT, N_BOOK_SLOT
 
 class BorrowingBookTestCase(TestCase):
@@ -54,7 +55,7 @@ class ReturningBookTestCase(TestCase):
             for num_slot in range(1, N_SHELF_SLOT+1):
                 ShelfSlot.objects.create(shelf=shelf, slot_number=num_slot)
 
-        self.borrow_record = Borrow.objects.create(reader=self.reader, book=self.book, returned=False, borrow_date="2022-01-01", return_date="2022-02-01")
+        Borrow.objects.create(reader=self.reader, book=self.book, returned=False, borrow_date="2022-01-01", return_date="2022-02-01")
 
 
     def test_returning_book(self):
@@ -126,3 +127,34 @@ class SortingBooksTestCase(TestCase):
         for sorted_book, bookshelf in zip(sorted_books, BookShelf.objects.all()):
             self.assertEqual(sorted_book, bookshelf.book)
 
+class BookMovementTestCase(TestCase):
+
+    def setUp(self):
+        self.book = Book.objects.create(title='Test book', 
+                                        page_count=100, 
+                                        publication_date=2023)
+
+        self.librarian = Librarian.objects.create(name='Test librarian')  
+        self.hall = Hall.objects.create(librarian=self.librarian)
+
+        # Создание стеллажей и полок
+        for num_shelf in range(1, N_SHELF+1):
+            shelf = Shelf.objects.create(number=num_shelf, hall=self.hall)
+            for num_slot in range(1, N_SHELF_SLOT+1):
+                ShelfSlot.objects.create(shelf=shelf, slot_number=num_slot)
+        
+        # Размещение книги на полке
+        BookShelf.objects.create(book=self.book, shelf_slot=ShelfSlot.objects.first())
+
+    def test_bookmovement(self):
+
+        # Случайная полка
+        to_slot = ShelfSlot.objects.order_by('?')[0]
+        bookmovement(book=self.book, to_slot=to_slot)
+
+        result_record_bookshelf = ShelfSlot.objects.get(books=self.book)
+        self.assertEqual(result_record_bookshelf, to_slot)
+    
+        result_record_to = BookMovement.objects.get(book=self.book).to_shelf_slot
+        self.assertEqual(result_record_to, to_slot)
+        
