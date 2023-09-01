@@ -69,8 +69,7 @@ def returning_book(reader, book):
 
     except FoundEmptySlot:
 
-        return_date_fact = timezone.now()
-        Borrow.objects.filter(reader=reader, book=book).update(return_date_fact=return_date_fact, returned=True)
+        Borrow.objects.filter(reader=reader, book=book).update(returned=True)
         return 'Книга успешно возвращена.'
 
     except EmptySlotNotFound:
