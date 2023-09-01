@@ -98,6 +98,7 @@ def sorting_books():
     for bookshelf in BookShelf.objects.filter(id__gt=sorted_books.count()):
         bookshelf.book = None
         bookshelf.save()
+    return 'Книги отсортированы.'
 
 # Количество книг определенного автора в библиотеке
 def books_by_author(author):
