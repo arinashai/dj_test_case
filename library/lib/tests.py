@@ -157,4 +157,3 @@ class BookMovementTestCase(TestCase):
     
         result_record_to = BookMovement.objects.get(book=self.book).to_shelf_slot
         self.assertEqual(result_record_to, to_slot)
-        
