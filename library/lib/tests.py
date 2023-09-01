@@ -1,8 +1,8 @@
 from django.test import TestCase
-from lib.models import Book, Reader, Librarian, Hall, Shelf, ShelfSlot, Borrow
+from lib.models import Book, Reader, Librarian, Hall, Shelf, ShelfSlot, Borrow, BookShelf
 from lib.methods import borrowing_book, MAX_READER_BOOK
-from lib.methods import returning_book
-from lib.models import N_SHELF, N_SHELF_SLOT
+from lib.methods import returning_book, sorting_books
+from lib.models import N_SHELF, N_SHELF_SLOT, N_BOOK_SLOT
 
 class BorrowingBookTestCase(TestCase):
 
@@ -54,12 +54,28 @@ class ReturningBookTestCase(TestCase):
             for num_slot in range(1, N_SHELF_SLOT+1):
                 ShelfSlot.objects.create(shelf=shelf, slot_number=num_slot)
 
-        Borrow.objects.create(reader=self.reader, book=self.book, returned=False, borrow_date="2022-01-01", return_date="2022-02-01")
+        self.borrow_record = Borrow.objects.create(reader=self.reader, book=self.book, returned=False, borrow_date="2022-01-01", return_date="2022-02-01")
 
 
     def test_returning_book(self):
         result = returning_book(self.reader, self.book)
         self.assertEqual(result, 'Книга успешно возвращена.')
+    
+    def test_returning_no_free_space_book(self):
+
+        # Заполняем полки книгами
+        for shelf_slot in ShelfSlot.objects.all():
+            for _ in range(N_BOOK_SLOT):
+                extra_book = Book.objects.create(
+                    title="Extra book",
+                    author="Author",
+                    page_count=100,
+                    publication_date=2023,
+                )
+                BookShelf.objects.create(book=extra_book, shelf_slot=shelf_slot)
+
+        result = returning_book(self.reader, self.book)
+        self.assertEqual(result, "Все полки заняты.")
     
     def test_returning_unavailable_book(self):
         book1 = Book.objects.create(title='Другая книга', 
@@ -72,4 +88,41 @@ class ReturningBookTestCase(TestCase):
         returning_book(self.reader, self.book)
         result = returning_book(self.reader, self.book)
         self.assertEqual(result, 'Читатель уже вернул книгу.')
-    
+
+class SortingBooksTestCase(TestCase):
+
+    def setUp(self):
+
+        self.books = [Book.objects.create(title='B test book', 
+                            page_count=100,
+                            edition_type= 'AType',
+                            publication_date=2023),
+                     Book.objects.create(title='A test book', 
+                            page_count=150, 
+                            edition_type= 'AType',
+                            publication_date=2021),
+                     Book.objects.create(title='A test book', 
+                            page_count=50, 
+                            edition_type= 'BType',
+                            publication_date=2022)]
+
+        self.librarian = Librarian.objects.create(name='Test librarian')  
+        self.hall = Hall.objects.create(librarian=self.librarian)
+        
+        # Создание стеллажей и полок
+        for num_shelf in range(1, N_SHELF+1):
+            shelf = Shelf.objects.create(number=num_shelf, hall=self.hall)
+            for num_slot in range(1, N_SHELF_SLOT+1):
+                ShelfSlot.objects.create(shelf=shelf, slot_number=num_slot)
+        
+        # Размещение книг на полках
+        for book, shelf_slot in zip(self.books, ShelfSlot.objects.all()):
+            BookShelf.objects.create(book=book, shelf_slot=shelf_slot)
+
+    def test_sorting_book(self):
+        sorted_books = Book.objects.all().order_by('edition_type', 'title', 'publication_date', 'page_count')
+        sorting_books()
+
+        for sorted_book, bookshelf in zip(sorted_books, BookShelf.objects.all()):
+            self.assertEqual(sorted_book, bookshelf.book)
+
