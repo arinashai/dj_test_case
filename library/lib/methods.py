@@ -45,7 +45,7 @@ def borrowing_book(reader, book):
 
 def returning_book(reader, book):
 
-    if Borrow.objects.filter(reader=reader, book=book).exists():
+    if not Borrow.objects.filter(reader=reader, book=book):
         return 'Читатель не может вернуть книгу, которую не брал.'
     if Borrow.objects.filter(reader=reader, book=book,  returned=True).exists():
         return 'Читатель уже вернул книгу.'
