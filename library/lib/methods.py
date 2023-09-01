@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 from django.utils import timezone
-from lib.models import Borrow, Hall, BookShelf, Book, BookMovement
+from lib.models import Borrow, Hall, BookShelf, Book, BookMovement, ShelfSlot
 from django.db.models import Count, Avg
 
 MAX_READER_BOOK = 3
@@ -17,7 +17,10 @@ def last_month_date():
 
 def bookmovement(book, to_slot):
     date = datetime.now()
-    from_slot = BookShelf.objects.get(book=book).shelf_slot
+    from_slot = ShelfSlot.objects.get(books=book)
+    # Перемещаем
+    BookShelf.objects.filter(book=book).update(shelf_slot=to_slot)
+    # Записываем перемещения
     move = BookMovement(book=book, from_shelf_slot=from_slot, to_shelf_slot=to_slot, date=date)
     move.save()
     return 'Перемещения книги внесены в журнал.'
