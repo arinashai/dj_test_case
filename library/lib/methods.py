@@ -29,7 +29,7 @@ def borrowing_book(reader, book):
         return 'Книги нет в наличии.'
 
     # Читатель уже взял и держит у себя 3 книги, поэтому больше взять не может, пока не вернет их
-    if Borrow.objects.filter(reader=reader, returned=False).count() > 2:
+    if Borrow.objects.filter(reader=reader, returned=False).count()>=MAX_READER_BOOK:
         return f'Читатель уже взял максимальное количество книг: {MAX_READER_BOOK}.'
     
     borrow_date = timezone.now()
